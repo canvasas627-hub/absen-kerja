@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absensi Kantor</title>
+
+<style>
+body{font-family: Arial; background:#f2f2f2; padding:20px;}
+.box{max-width:420px; margin:auto; background:white; padding:20px; border-radius:10px;}
+h2{text-align:center;}
+input, button{width:100%; padding:10px; margin-top:10px;}
+.masuk{ background:#007bff; color:white; border:none; }
+.pulang{ background:#28a745; color:white; border:none; }
+.reset{ background:red; color:white; border:none; }
+li{list-style:none; background:#e9f0ff; margin-top:5px; padding:8px; border-radius:5px;}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>🏢 ABSENSI KANTOR</h2>
+
+<input type="text" id="nama" placeholder="Masukkan nama">
+
+<button class="masuk" onclick="absen('MASUK')">Absen Masuk</button>
+<button class="pulang" onclick="absen('PULANG')">Absen Pulang</button>
+<button class="reset" onclick="resetData()">Hapus Data</button>
+
+<ul id="list"></ul>
+</div>
+
+<script>
+let role = localStorage.getItem("role");
+
+if(!role){
+  let user = prompt("Login sebagai (admin/karyawan):");
+
+  if(user === "admin"){
+    let pass = prompt("Password admin:");
+    if(pass === "admin123"){
+      role = "admin";
+    } else {
+      alert("Password salah!");
+      role = "karyawan";
+    }
+  } else {
+    role = "karyawan";
+  }
+
+  localStorage.setItem("role", role);
+}
+
+window.onload = function(){
+  if(role !== "admin"){
+    document.querySelector(".reset").style.display = "none";
+  }
+}
+
+let data = JSON.parse(localStorage.getItem("absen_kantor")) || [];
+
+function getShift(){
+  let jam = new Date().getHours();
+  if(jam >= 6 && jam < 14) return "SHIFT 1 (06.00-14.00)";
+  else if(jam >= 14 && jam < 22) return "SHIFT 2 (14.00-22.00)";
+  else return "LUAR SHIFT";
+}
+
+function absen(type){
+  let nama = document.getElementById("nama").value;
+
+  if(nama === ""){
+    alert("Nama wajib diisi!");
+    return;
+  }
+
+  let waktu = new Date().toLocaleString();
+
+  data.push({
+    nama: nama,
+    type: type,
+    shift: getShift(),
+    waktu: waktu
+  });
+
+  document.getElementById("nama").value = "";
+  render();
+}
+
+function render(){
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach((d,i)=>{
+    list.innerHTML += `
+      <li>
+        ${i+1}. ${d.nama} - ${d.type}<br>
+        ${d.shift}<br>
+        ${d.waktu}
+      </li>
+    `;
+  });
+
+  localStorage.setItem("absen_kantor", JSON.stringify(data));
+}
+
+function resetData(){
+  if(role !== "admin"){
+    alert("Kamu bukan admin!");
+    return;
+  }
+
+  if(confirm("Hapus semua data?")){
+    data = [];
+    render();
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
